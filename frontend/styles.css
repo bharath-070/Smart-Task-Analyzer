@@ -1,0 +1,78 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+}
+
+header {
+    background: #4a7cfe;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+}
+
+.input-box, .output-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    flex: 1;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+h2 {
+    margin-top: 0;
+}
+
+.form-group {
+    margin: 10px 0;
+}
+
+input, textarea, select, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+textarea {
+    height: 120px;
+    resize: vertical;
+}
+
+button {
+    margin-top: 10px;
+    cursor: pointer;
+    background: #4a7cfe;
+    color: white;
+    border: none;
+}
+
+button.analyze {
+    background: #1f5eff;
+}
+
+.task-card {
+    background: #fafafa;
+    border-left: 8px solid #777;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+.high { border-color: #e74c3c; } /* Red */
+.medium { border-color: #f1c40f; } /* Yellow */
+.low { border-color: #2ecc71; }  /* Green */
+
+.explanation {
+    font-size: 13px;
+    margin-top: 8px;
+    color: #555;
+}
