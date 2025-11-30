@@ -1,8 +1,9 @@
-// FRONTEND LOGIC FOR SMART TASK ANALYZER
-
+// GLOBAL TASK STORAGE
 let tasks = [];
 
-// Add task manually
+/* -----------------------------
+   ADD TASK MANUALLY
+------------------------------ */
 document.getElementById("addTaskBtn").onclick = () => {
     const title = document.getElementById("title").value.trim();
     const due = document.getElementById("due_date").value;
@@ -28,35 +29,86 @@ document.getElementById("addTaskBtn").onclick = () => {
     };
 
     tasks.push(newTask);
+    renderAddedTasks();
+
     alert("Task added!");
 };
 
-// Load JSON input
+
+/* -----------------------------
+   RENDER ADDED TASKS (LEFT PANEL)
+------------------------------ */
+function renderAddedTasks() {
+    const box = document.getElementById("addedTasks");
+    box.innerHTML = "";
+
+    tasks.forEach(t => {
+        const card = document.createElement("div");
+        card.className = "task-card";
+
+        card.innerHTML = `
+            <div class="task-title">${t.title}</div>
+            <div class="task-details">
+                <strong>ID:</strong> ${t.id}<br>
+                <strong>Due:</strong> ${t.due_date || "None"}<br>
+                <strong>Effort:</strong> ${t.estimated_hours} hrs<br>
+                <strong>Importance:</strong> ${t.importance}<br>
+                <strong>Dependencies:</strong> ${t.dependencies.length ? t.dependencies.join(", ") : "None"}
+            </div>
+        `;
+
+        box.appendChild(card);
+    });
+}
+
+
+/* -----------------------------
+   LOAD JSON INPUT
+------------------------------ */
 document.getElementById("loadJsonBtn").onclick = () => {
+    const text = document.getElementById("jsonInput").value.trim();
+
+    if (!text) {
+        alert("Please paste valid JSON");
+        return;
+    }
+
     try {
-        const json = JSON.parse(document.getElementById("jsonInput").value);
-        tasks = json;
+        const parsed = JSON.parse(text);
+
+        if (!Array.isArray(parsed)) {
+            alert("JSON must be an array of tasks");
+            return;
+        }
+
+        tasks = parsed;
+        renderAddedTasks();
         alert("JSON loaded!");
-    } catch (e) {
+
+    } catch (err) {
         alert("Invalid JSON");
     }
 };
 
-// Strategy → select weights
+
+/* -----------------------------
+   STRATEGY WEIGHTS
+------------------------------ */
 function getWeights(strategy) {
-    if (strategy === "fast") {
+    if (strategy === "fast")
         return { urgency: 0.1, importance: 0.1, effort: 0.7, dependency: 0.1 };
-    }
-    if (strategy === "impact") {
+    if (strategy === "impact")
         return { urgency: 0.1, importance: 0.8, effort: 0.05, dependency: 0.05 };
-    }
-    if (strategy === "deadline") {
+    if (strategy === "deadline")
         return { urgency: 0.8, importance: 0.1, effort: 0.05, dependency: 0.05 };
-    }
-    return null; // smart balance (default backend weights)
+
+    return null; // smart balance
 }
 
-// Analyze button
+
+/* -----------------------------
+   ANALYZE TASKS
+------------------------------ */
 document.getElementById("analyzeBtn").onclick = async () => {
     if (tasks.length === 0) {
         alert("No tasks to analyze");
@@ -68,7 +120,6 @@ document.getElementById("analyzeBtn").onclick = async () => {
 
     let analyzeURL = "http://localhost:8000/api/tasks/analyze/";
 
-    // Pass weights to backend via ?weights=...
     if (weights) {
         analyzeURL += "?weights=" + encodeURIComponent(JSON.stringify(weights));
     }
@@ -80,55 +131,71 @@ document.getElementById("analyzeBtn").onclick = async () => {
     });
 
     const data = await res.json();
-    renderTasks(data);
+
+    renderAnalyzedTasks(data);
     fetchSuggestions(data);
 };
 
-// Render analyzed tasks
-function renderTasks(list) {
+
+/* -----------------------------
+   RENDER ANALYZED TASKS (RIGHT PANEL)
+------------------------------ */
+function renderAnalyzedTasks(list) {
     const box = document.getElementById("results");
     box.innerHTML = "";
 
     list.forEach(t => {
-        const level = t.score >= 15 ? "high" : t.score >= 8 ? "medium" : "low";
+        const level =
+            t.score >= 15 ? "high" :
+            t.score >= 8 ? "medium" :
+            "low";
 
-        const div = document.createElement("div");
-        div.className = `task-card ${level}`;
+        const card = document.createElement("div");
+        card.className = `task-card ${level}`;
 
-        div.innerHTML = `
-            <strong>${t.title}</strong> (Score: ${t.score})
-            <br>Due: ${t.due_date || "None"}
-            <br>Effort: ${t.estimated_hours} hrs
-            <br>Importance: ${t.importance}
+        card.innerHTML = `
+            <div class="task-title">${t.title}</div>
+            <div class="task-details">
+                <strong>Score:</strong> ${t.score}<br>
+                <strong>Due:</strong> ${t.due_date || "None"}<br>
+                <strong>Effort:</strong> ${t.estimated_hours} hrs<br>
+                <strong>Importance:</strong> ${t.importance}<br>
+                <strong>Dependencies:</strong> ${t.dependencies.length ? t.dependencies.join(", ") : "None"}
+            </div>
         `;
 
-        box.appendChild(div);
+        box.appendChild(card);
     });
 }
 
-// Fetch suggestions
-async function fetchSuggestions(fullList) {
 
-    // Suggest endpoint expects tasks as query param
-    const url = "http://localhost:8000/api/tasks/suggest/?tasks=" + encodeURIComponent(JSON.stringify(fullList));
+/* -----------------------------
+   FETCH SUGGESTIONS (TOP 3)
+------------------------------ */
+async function fetchSuggestions(list) {
+    const url =
+        "http://localhost:8000/api/tasks/suggest/?tasks=" +
+        encodeURIComponent(JSON.stringify(list));
 
     const res = await fetch(url);
     const data = await res.json();
+
     const box = document.getElementById("suggested");
     box.innerHTML = "";
 
     data.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "task-card high"; // always highlight suggestions
+        const card = document.createElement("div");
+        card.className = "task-card high"; // suggestions always highlighted
 
-        div.innerHTML = `
-            <strong>${t.title}</strong>
-            <br>Score: ${t.score}
-            <div class="explanation">
-                ${t.explanation.join("<br>")}
+        card.innerHTML = `
+            <div class="task-title">${t.title}</div>
+            <div class="task-details">
+                <strong>Score:</strong> ${t.score}<br>
+                <strong>Reason:</strong><br>
+                ${t.explanation.map(e => "- " + e).join("<br>")}
             </div>
         `;
 
-        box.appendChild(div);
+        box.appendChild(card);
     });
 }

@@ -1,78 +1,97 @@
 body {
     margin: 0;
-    padding: 0;
     font-family: Arial, sans-serif;
-    background: #f4f4f4;
+    background: #eef1f7;
 }
 
 header {
-    background: #4a7cfe;
+    background: #4a7cff;
     color: white;
-    padding: 20px;
     text-align: center;
+    padding: 18px 0;
 }
 
-.container {
+.main-wrapper {
     display: flex;
+    justify-content: center;
     padding: 20px;
-    gap: 20px;
+    gap: 25px;
 }
 
-.input-box, .output-box {
+.panel {
     background: white;
     padding: 20px;
     border-radius: 8px;
     flex: 1;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    min-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
 }
 
-h2 {
-    margin-top: 0;
+.left-panel {
+    max-width: 450px;
+}
+
+.right-panel {
+    max-width: 650px;
 }
 
 .form-group {
-    margin: 10px 0;
+    margin-bottom: 12px;
 }
 
-input, textarea, select, button {
+input, textarea, select {
     width: 100%;
     padding: 8px;
-    margin-top: 5px;
+    margin-top: 4px;
     border-radius: 6px;
     border: 1px solid #ccc;
 }
 
 textarea {
-    height: 120px;
+    height: 100px;
     resize: vertical;
 }
 
 button {
+    width: 100%;
     margin-top: 10px;
-    cursor: pointer;
-    background: #4a7cfe;
-    color: white;
+    padding: 10px;
+    border-radius: 6px;
     border: none;
+    cursor: pointer;
+    font-weight: bold;
 }
 
-button.analyze {
-    background: #1f5eff;
-}
+.btn-primary { background: #0066ff; color: white; }
+.btn-secondary { background: #555; color: white; }
+.btn-analyze { background: #1f5eff; color: white; }
 
 .task-card {
-    background: #fafafa;
-    border-left: 8px solid #777;
-    padding: 12px;
+    background: #f8f9ff;
+    border-left: 6px solid #4a7cff;
+    padding: 10px;
     margin-bottom: 10px;
     border-radius: 6px;
 }
 
-.high { border-color: #e74c3c; } /* Red */
-.medium { border-color: #f1c40f; } /* Yellow */
-.low { border-color: #2ecc71; }  /* Green */
-
-.explanation {
-    font-size: 13px;
-    margin-top: 8px;
-    color: #555;
+.task-title {
+    font-weight: bold;
+    font-size: 15px;
 }
+
+.task-details {
+    font-size: 13px;
+    margin-top: 4px;
+    color: #444;
+}
+
+.task-score {
+    margin-top: 6px;
+    font-weight: bold;
+    color: #333;
+}
+
+.high { border-color: #e74c3c; }
+.medium { border-color: #f1c40f; }
+.low { border-color: #2ecc71; }
