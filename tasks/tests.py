@@ -1,6 +1,6 @@
+import json
 from django.test import TestCase
 from datetime import date, timedelta
-
 from .scoring import calculate_score, detect_cycle, DependencyCycleError
 
 
@@ -95,3 +95,106 @@ class ScoringTests(TestCase):
             detect_cycle(graph)
         except DependencyCycleError:
             self.fail("Unexpected cycle error")
+
+
+
+
+
+class APITests(TestCase):
+
+    def test_analyze_tasks_post(self):
+        """POST /api/tasks/analyze/ → should return sorted tasks with scores."""
+        url = "/api/tasks/analyze/"
+
+        tasks = [
+            {
+                "id": "t1",
+                "title": "Low Importance",
+                "due_date": None,
+                "estimated_hours": 5,
+                "importance": 2,
+                "dependencies": []
+            },
+            {
+                "id": "t2",
+                "title": "High Importance",
+                "due_date": None,
+                "estimated_hours": 3,
+                "importance": 9,
+                "dependencies": []
+            }
+        ]
+
+        response = self.client.post(
+            url,
+            data=json.dumps(tasks),
+            content_type="application/json"
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+
+        # The higher importance task should come first
+        self.assertEqual(data[0]["title"], "High Importance")
+        self.assertIn("score", data[0])
+
+    def test_analyze_rejects_non_post(self):
+        """GET on analyze should return 405."""
+        response = self.client.get("/api/tasks/analyze/")
+        self.assertEqual(response.status_code, 405)
+
+    def test_analyze_detects_cycle(self):
+        """Should detect circular dependencies."""
+        url = "/api/tasks/analyze/"
+
+        circular_tasks = [
+            {"id": "a", "title": "A", "due_date": None, "estimated_hours": 1, "importance": 5, "dependencies": ["b"]},
+            {"id": "b", "title": "B", "due_date": None, "estimated_hours": 1, "importance": 5, "dependencies": ["a"]}
+        ]
+
+        response = self.client.post(
+            url,
+            data=json.dumps(circular_tasks),
+            content_type="application/json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Circular", response.json()["error"])
+
+    def test_suggest_tasks_top3(self):
+        """GET /api/tasks/suggest/ should return top 3 tasks with explanations."""
+        url = "/api/tasks/suggest/"
+
+        future = (date.today() + timedelta(days=1)).isoformat()
+
+        tasks = [
+            {"id": "t1", "title": "High Importance", "importance": 10, "due_date": future, "estimated_hours": 2, "dependencies": []},
+            {"id": "t2", "title": "Medium Importance", "importance": 6, "due_date": None, "estimated_hours": 1, "dependencies": []},
+            {"id": "t3", "title": "Low Importance", "importance": 3, "due_date": None, "estimated_hours": 8, "dependencies": []},
+            {"id": "t4", "title": "Another High", "importance": 9, "due_date": None, "estimated_hours": 2, "dependencies": []}
+        ]
+
+        response = self.client.get(
+            url + "?tasks=" + json.dumps(tasks)
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+
+        # Should return only top 3
+        self.assertEqual(len(data), 3)
+        # Each task must have an explanation list
+        self.assertTrue("explanation" in data[0])
+
+    def test_suggest_rejects_non_get(self):
+        """POST on suggest should return 405."""
+        response = self.client.post("/api/tasks/suggest/")
+        self.assertEqual(response.status_code, 405)
+
+    def test_suggest_requires_tasks_param(self):
+        """Should return error when ?tasks= parameter is missing."""
+        response = self.client.get("/api/tasks/suggest/")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Missing", response.json()["error"])
