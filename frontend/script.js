@@ -157,33 +157,60 @@ document.getElementById("analyzeBtn").onclick = async () => {
 /* -----------------------------
    RENDER ANALYZED TASKS (RIGHT PANEL)
 ------------------------------ */
+// Render analyzed tasks (with priority colors + explanation)
+// Render analyzed tasks with tiers + explanation
 function renderAnalyzedTasks(list) {
     const box = document.getElementById("results");
     box.innerHTML = "";
 
-    list.forEach(t => {
-        const level =
-            t.score >= 15 ? "high" :
-            t.score >= 8 ? "medium" :
-            "low";
+    if (list.length === 0) return;
 
-        const card = document.createElement("div");
-        card.className = `task-card ${level}`;
+    // --- Determine tier sizes ---
+    const total = list.length;
+    const groupSize = Math.ceil(total / 3);
 
-        card.innerHTML = `
+    // Tier assignment: 
+    // Top third → High (red)
+    // Middle third → Medium (yellow)
+    // Bottom third → Low (green)
+    list.forEach((t, i) => {
+        let level = "";
+        if (i < groupSize) level = "high";
+        else if (i < groupSize * 2) level = "medium";
+        else level = "low";
+
+        // Build explanation text based on scoring factors
+        const explanation = [];
+
+        // From your backend scoring model
+        if (t.due_date) explanation.push("Has due date influencing urgency");
+        if (t.estimated_hours <= 2) explanation.push("Low effort → quick to finish");
+        if (t.importance >= 8) explanation.push("High importance");
+        if (t.dependencies && t.dependencies.length > 0) explanation.push("Has dependencies increasing priority");
+
+        // Build card
+        const div = document.createElement("div");
+        div.className = `task-card ${level}`;
+
+        div.innerHTML = `
             <div class="task-title">${t.title}</div>
+
             <div class="task-details">
                 <strong>Score:</strong> ${t.score}<br>
                 <strong>Due:</strong> ${t.due_date || "None"}<br>
                 <strong>Effort:</strong> ${t.estimated_hours} hrs<br>
                 <strong>Importance:</strong> ${t.importance}<br>
-                <strong>Dependencies:</strong> ${t.dependencies.length ? t.dependencies.join(", ") : "None"}
+                <strong>Dependencies:</strong> ${t.dependencies.join(", ") || "None"}<br><br>
+
+                <strong>Why this score?</strong><br>
+                ${explanation.map(e => `• ${e}`).join("<br>")}
             </div>
         `;
 
-        box.appendChild(card);
+        box.appendChild(div);
     });
 }
+
 
 
 /* -----------------------------

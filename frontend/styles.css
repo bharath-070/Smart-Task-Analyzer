@@ -95,3 +95,14 @@ button {
 .high { border-color: #e74c3c; }
 .medium { border-color: #f1c40f; }
 .low { border-color: #2ecc71; }
+
+.priority-tag {
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 12px;
+    float: right;
+}
+
+.priority-tag.high { background: #e74c3c; color: white; }
+.priority-tag.medium { background: #f1c40f; color: black; }
+.priority-tag.low { background: #2ecc71; color: white; }
