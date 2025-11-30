@@ -1,28 +1,53 @@
 from datetime import date
 
+class DependencyCycleError(Exception):
+    pass
 
-def calculate_task_score(task_data):
-    """
-    Calculates a priority score.
-    Higher score = Higher priority.
-    """
-    score = 0
 
-    # 1. Urgency Calculation
-    today = date.today()
-    # Convert string date to object if necessary...
-    days_until_due = (task_data['due_date'] - today).days
+def detect_cycle(graph):
+    visited = set()
+    stack = set()
 
-    if days_until_due < 0:
-        score += 100  # OVERDUE! Huge priority boost
-    elif days_until_due <= 3:
-        score += 50   # Due very soon
+    def dfs(node):
+        if node in stack:
+            raise DependencyCycleError("Circular dependency detected")
+        if node in visited:
+            return
+        visited.add(node)
+        stack.add(node)
+        for nxt in graph.get(node, []):
+            dfs(nxt)
+        stack.remove(node)
 
-    # 2. Importance Weighting
-    score += (task_data['importance'] * 5) # Multiply to give it weight
+    for task in graph:
+        dfs(task)
 
-    # 3. Effort (Quick wins logic)
-    if task_data['estimated_hours'] < 2:
-        score += 10 # Small bonus for quick tasks
 
-    return score
+def calculate_score(task, all_tasks):
+    # --- URGENCY ---
+    if not task.get("due_date"):
+        urgency = 0
+    else:
+        due = date.fromisoformat(task["due_date"])
+        days_left = (due - date.today()).days
+        if days_left < 0:
+            urgency = 15  # high penalty for overdue
+        elif days_left == 0:
+            urgency = 12
+        else:
+            urgency = max(0, 10 - days_left)
+
+    # --- IMPORTANCE ---
+    importance = task.get("importance", 5)
+
+    # --- EFFORT ---
+    effort = task.get("estimated_hours", 1)
+    effort_score = 10 / (effort + 1)  # lower effort → higher score
+
+    # --- DEPENDENCY WEIGHT ---
+    dependency_count = len(task.get("dependencies", []))
+    dependency_score = dependency_count * 3
+
+    # FINAL SCORE (Smart Balanced)
+    final_score = (urgency * 0.4) + (importance * 0.4) + (effort_score * 0.1) + (dependency_score * 0.1)
+    return round(final_score, 2)
