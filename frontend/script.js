@@ -115,25 +115,42 @@ document.getElementById("analyzeBtn").onclick = async () => {
         return;
     }
 
-    const strategy = document.getElementById("strategySelect").value;
-    const weights = getWeights(strategy);
-
-    let analyzeURL = "http://localhost:8000/api/tasks/analyze/";
-
-    if (weights) {
-        analyzeURL += "?weights=" + encodeURIComponent(JSON.stringify(weights));
-    }
-
-    const res = await fetch(analyzeURL, {
+    // Always call backend for Smart Balance score
+    const res = await fetch("http://localhost:8000/api/tasks/analyze/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(tasks)
     });
 
-    const data = await res.json();
+    let analyzed = await res.json();
 
-    renderAnalyzedTasks(data);
-    fetchSuggestions(data);
+    // Apply strategy sorting
+    const strategy = document.getElementById("strategySelect").value;
+
+    if (strategy === "fast") {
+        // Fastest Wins → lowest effort first
+        analyzed.sort((a, b) => a.estimated_hours - b.estimated_hours);
+    }
+
+    else if (strategy === "impact") {
+        // High Impact → highest importance first
+        analyzed.sort((a, b) => b.importance - a.importance);
+    }
+
+    else if (strategy === "deadline") {
+        // Deadline Driven → earliest due date first
+        analyzed.sort((a, b) => {
+            if (!a.due_date) return 1; 
+            if (!b.due_date) return -1;
+            return new Date(a.due_date) - new Date(b.due_date);
+        });
+    }
+
+    // Smart Balance = default backend sorted order
+    // No sorting needed
+
+    renderAnalyzedTasks(analyzed);
+    fetchSuggestions(analyzed);
 };
 
 
