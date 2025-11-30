@@ -1,7 +1,6 @@
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
 from .scoring import calculate_score, detect_cycle, DependencyCycleError
 
 

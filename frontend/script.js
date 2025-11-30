@@ -1,9 +1,7 @@
 // GLOBAL TASK STORAGE
 let tasks = [];
 
-/* -----------------------------
-   ADD TASK MANUALLY
------------------------------- */
+/* ADD TASK MANUALLY */
 document.getElementById("addTaskBtn").onclick = () => {
     const title = document.getElementById("title").value.trim();
     const due = document.getElementById("due_date").value;
@@ -35,9 +33,7 @@ document.getElementById("addTaskBtn").onclick = () => {
 };
 
 
-/* -----------------------------
-   RENDER ADDED TASKS (LEFT PANEL)
------------------------------- */
+/* RENDER ADDED TASKS  */
 function renderAddedTasks() {
     const box = document.getElementById("addedTasks");
     box.innerHTML = "";
@@ -62,9 +58,7 @@ function renderAddedTasks() {
 }
 
 
-/* -----------------------------
-   LOAD JSON INPUT
------------------------------- */
+/* LOAD JSON INPUT */
 document.getElementById("loadJsonBtn").onclick = () => {
     const text = document.getElementById("jsonInput").value.trim();
 
@@ -91,9 +85,7 @@ document.getElementById("loadJsonBtn").onclick = () => {
 };
 
 
-/* -----------------------------
-   STRATEGY WEIGHTS
------------------------------- */
+/* STRATEGY WEIGHTS */
 function getWeights(strategy) {
     if (strategy === "fast")
         return { urgency: 0.1, importance: 0.1, effort: 0.7, dependency: 0.1 };
@@ -106,9 +98,7 @@ function getWeights(strategy) {
 }
 
 
-/* -----------------------------
-   ANALYZE TASKS
------------------------------- */
+/* ANALYZE TASKS */
 document.getElementById("analyzeBtn").onclick = async () => {
     if (tasks.length === 0) {
         alert("No tasks to analyze");
@@ -146,19 +136,12 @@ document.getElementById("analyzeBtn").onclick = async () => {
         });
     }
 
-    // Smart Balance = default backend sorted order
-    // No sorting needed
-
     renderAnalyzedTasks(analyzed);
     fetchSuggestions(analyzed);
 };
 
 
-/* -----------------------------
-   RENDER ANALYZED TASKS (RIGHT PANEL)
------------------------------- */
 // Render analyzed tasks (with priority colors + explanation)
-// Render analyzed tasks with tiers + explanation
 function renderAnalyzedTasks(list) {
     const box = document.getElementById("results");
     box.innerHTML = "";
@@ -213,9 +196,7 @@ function renderAnalyzedTasks(list) {
 
 
 
-/* -----------------------------
-   FETCH SUGGESTIONS (TOP 3)
------------------------------- */
+/* FETCH SUGGESTIONS (TOP 3)*/
 async function fetchSuggestions(list) {
     const url =
         "http://localhost:8000/api/tasks/suggest/?tasks=" +
